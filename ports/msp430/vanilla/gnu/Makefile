@@ -112,13 +112,6 @@ endif
 
 VPATH = $(QEP_SRCDIR) $(QF_SRCDIR) $(QS_SRCDIR)
 
-# the 'all' target ===========================================================
-
-all: $(BINDIR) $(BINDIR)/libqp.a
-
-$(BINDIR) :
-	mkdir -p $@
-
 # the objects to build =======================================================
 QEP_OBJS = \
 	$(BINDIR)/qep.o \
@@ -162,7 +155,7 @@ QF_OBJS = \
 
 # the 'all' target ===========================================================
 
-all: $(BINDIR)/libqp.a $(BIN_DIR)
+all: $(BIN_DIR) $(BINDIR)/libqp.a
 	-$(RM) $(BINDIR)/*.o
 
 $(BIN_DIR):

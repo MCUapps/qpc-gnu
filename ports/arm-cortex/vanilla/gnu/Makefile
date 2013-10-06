@@ -1,7 +1,7 @@
 ##############################################################################
-# Product:  QP/C, MSP430 port, GNU compiler
-# Last Updated for Version: 4.5.03
-# Date of the Last Update:  Nov 25, 2012
+# Product:  QP/C, ARM-Cortex port, GNU compiler
+# Last Updated for Version: 4.5.04
+# Date of the Last Update:  Oct 6, 2013
 #
 #                    Q u a n t u m     L e a P s
 #                    ---------------------------
@@ -50,14 +50,13 @@
 RM = rm -f
 
 #-----------------------------------------------------------------------------
-CC  = msp430-gcc
-LIB = msp430-ar
+CC  = arm-none-eabi-gcc
+LIB = arm-none-eabi-ar
 
 QPC        ?= ../../../..
 QP_INCDIR  = $(QPC)/include
 QEP_SRCDIR = $(QPC)/qep/source
 QF_SRCDIR  = $(QPC)/qf/source
-QK_SRCDIR  = $(QPC)/qk/source
 QS_SRCDIR  = $(QPC)/qs/source
 QP_PRTDIR  = .
 LIBFLAGS   = rs
@@ -65,8 +64,41 @@ QS_OBJS    =
 
 CCINC      = -I$(QP_PRTDIR) -I$(QP_INCDIR)
 
-MSP430_CORE = 430
- 
+ifeq (cortex-m0, $(MCU))
+
+ARM_CORE = cortex-m0
+MCUFLAGS = -mcpu=$(ARM_CORE) -mthumb -mabi=aapcs -mfloat-abi=soft
+
+else ifeq (cortex-m0plus, $(MCU))
+
+ARM_CORE = cortex-m0plus
+MCUFLAGS = -mcpu=$(ARM_CORE) -mthumb -mfloat-abi=soft
+
+else ifeq (cortex-m3, $(MCU))
+
+ARM_CORE = cortex-m3
+MCUFLAGS = -mcpu=$(ARM_CORE) -mthumb -mabi=aapcs -mfloat-abi=soft
+
+else ifeq (cortex-m4-vfp, $(MCU))
+
+ARM_CORE = cortex-m4
+ARM_FPU = fpv4-sp-d16
+MCUFLAGS = -mcpu=$(ARM_CORE) -mfpu=$(ARM_FPU) \
+	-mlittle-endian -mthumb -mthumb-interwork
+
+else ifeq (cortex-m4-fpv4-sp-d16, $(MCU))
+
+ARM_CORE = cortex-m4
+ARM_FPU = fpv4-sp-d16
+MCUFLAGS = -mcpu=$(ARM_CORE) -mfpu=$(ARM_FPU) -mfloat-abi=hard \
+	-mlittle-endian -mthumb -mthumb-interwork
+
+else
+
+$(error Must specify the MCU, like MCU=cortex-m0 )
+
+endif
+
 #-----------------------------------------------------------------------------
 # build options for various configurations
 #
@@ -77,7 +109,8 @@ BINDIR  = rel
 # gcc options
 # -c    : compile only
 # -O    : optimize
-CCFLAGS = -c -O2 -Wall -mcpu=$(MSP430_CORE) -o$@
+CCFLAGS = $(MCUFLAGS) -fdata-sections -ffunction-sections \
+        -c -O2 -Wall -o$@
 
 else ifeq (spy, $(CONF))  # Spy configuration ................................
 
@@ -87,7 +120,8 @@ BINDIR   = spy
 # -c    : compile only
 # -g    : source level debugging
 # -D    : define preprocessor macro
-CCFLAGS = -c -g -O -Wall -mcpu=$(MSP430_CORE) -DQ_SPY -o$@
+CCFLAGS = $(MCUFLAGS) -fdata-sections -ffunction-sections \
+        -c -g -O -Wall -DQ_SPY -o$@
 QS_OBJS = \
 	$(BINDIR)/qs.o \
 	$(BINDIR)/qs_.o \
@@ -107,7 +141,8 @@ QP_DEP  = $(QP_INCDIR)\qassert.h
 # gcc options
 # -c    : compile only
 # -g    : source level debugging
-CCFLAGS = -c -g -O -Wall -mcpu=$(MSP430_CORE) -o$@
+CCFLAGS = $(MCUFLAGS) -fdata-sections -ffunction-sections \
+        -c -g -O -Wall -o$@
 
 endif
 
@@ -151,29 +186,22 @@ QF_OBJS = \
 	$(BINDIR)/qte_arm.o \
 	$(BINDIR)/qte_darm.o \
 	$(BINDIR)/qte_rarm.o \
-	$(BINDIR)/qte_ctr.o
-
-QK_OBJS = \
-	$(BINDIR)/qk_ext.o \
-	$(BINDIR)/qk_mutex.o \
-	$(BINDIR)/qk_sched.o \
-	$(BINDIR)/qk.o \
-	$(BINDIR)/qk_port.o
+	$(BINDIR)/qte_ctr.o \
+	$(BINDIR)/qvanilla.o
 
 # the 'all' target ===========================================================
 
-all: $(BIN_DIR) $(BINDIR)/libqp.a
+all: $(BIN_DIR) $(BINDIR)/libqp_$(MCU).a
 	-$(RM) $(BINDIR)/*.o
 
 $(BIN_DIR):
-	mkdir $@
+	mkdir -p $@
 
-$(BINDIR)/libqp.a: 	$(QEP_OBJS) $(QF_OBJS) $(QK_OBJS) $(QS_OBJS)
-	-$(RM) $(BINDIR)/libqp.a
-	$(LIB) $(LIBFLAGS) $(BINDIR)/libqp.a \
+$(BINDIR)/libqp_$(MCU).a: $(QEP_OBJS) $(QF_OBJS) $(QS_OBJS)
+	-$(RM) $(BINDIR)/libqp_$(MCU).a
+	$(LIB) $(LIBFLAGS) $(BINDIR)/libqp_$(MCU).a \
 	$(QEP_OBJS) \
 	$(QF_OBJS) \
-	$(QK_OBJS) \
 	$(QS_OBJS)
 
 # QEP -----------------------------------------
@@ -283,22 +311,8 @@ $(BINDIR)/qte_rarm.o: $(QF_SRCDIR)/qte_rarm.c
 $(BINDIR)/qte_ctr.o: $(QF_SRCDIR)/qte_ctr.c
 	$(CC) $(CCFLAGS) $(CCINC) -I$(QF_SRCDIR) $<
 
-# QK -----------------------------------------
-
-$(BINDIR)/qk_ext.o: $(QK_SRCDIR)/qk_ext.c
-	$(CC) $(CCFLAGS) $(CCINC) -I$(QK_SRCDIR) $<
-
-$(BINDIR)/qk_mutex.o: $(QK_SRCDIR)/qk_mutex.c
-	$(CC) $(CCFLAGS) $(CCINC) -I$(QK_SRCDIR) $<
-
-$(BINDIR)/qk_sched.o: $(QK_SRCDIR)/qk_sched.c
-	$(CC) $(CCFLAGS) $(CCINC) -I$(QK_SRCDIR) $<
-
-$(BINDIR)/qk.o: $(QK_SRCDIR)/qk.c
-	$(CC) $(CCFLAGS) $(CCINC) -I$(QK_SRCDIR) $<
-
-$(BINDIR)/qk_port.o: qk_port.c
-	$(CC) $(CCFLAGS) $(CCINC) -I$(QK_SRCDIR) $<
+$(BINDIR)/qvanilla.o: $(QF_SRCDIR)/qvanilla.c
+	$(CC) $(CCFLAGS) $(CCINC) -I$(QF_SRCDIR) $<
 
 # QS -----------------------------------------
 
