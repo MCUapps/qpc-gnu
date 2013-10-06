@@ -155,10 +155,10 @@ QF_OBJS = \
 
 # the 'all' target ===========================================================
 
-all: $(BIN_DIR) $(BINDIR)/libqp.a
+all: $(BINDIR) $(BINDIR)/libqp.a
 	-$(RM) $(BINDIR)/*.o
 
-$(BIN_DIR):
+$(BINDIR):
 	mkdir $@
 
 $(BINDIR)/libqp.a: 	$(QEP_OBJS) $(QF_OBJS) $(QS_OBJS)

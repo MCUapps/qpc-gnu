@@ -205,10 +205,10 @@ QK_OBJS = \
 
 # the 'all' target ===========================================================
 
-all: $(BIN_DIR) $(BINDIR)/libqp_$(MCU).a
+all: $(BINDIR) $(BINDIR)/libqp_$(MCU).a
 	-$(RM) $(BINDIR)/*.o
 
-$(BIN_DIR):
+$(BINDIR):
 	mkdir -p $@
 
 $(BINDIR)/libqp_$(MCU).a: $(QEP_OBJS) $(QF_OBJS) $(QK_OBJS) $(QS_OBJS)
