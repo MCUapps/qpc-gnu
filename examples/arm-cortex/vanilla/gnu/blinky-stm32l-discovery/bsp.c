@@ -63,10 +63,6 @@ static GPIO_InitTypeDef  GPIO_InitStructure;
     #define UART_FR_TXFE        0x80U
     #define UART_TXFIFO_DEPTH   16U
 
-    enum AppRecords {                 /* application-specific trace records */
-        PHILO_STAT = QS_USER
-    };
-
 #endif
 
 /*..........................................................................*/

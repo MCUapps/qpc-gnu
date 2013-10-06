@@ -1,7 +1,7 @@
 ##############################################################################
-# Product: Makefile for Blinky, EK-LM4F120XL, Vanilla kernel, GNU/Sourcery
+# Product: Makefile for Blinky, STM32L-DISCOVERY, Vanilla kernel, GNU/Launchpad
 # Last Updated for Version: 4.5.04
-# Date of the Last Update:  Feb 07, 2013
+# Date of the Last Update:  Oct 03, 2013
 #
 #                    Q u a n t u m     L e a P s
 #                    ---------------------------
@@ -71,7 +71,7 @@ endif
 # directories
 #
 QP_PORT_DIR := $(QPC)/ports/arm-cortex/vanilla/gnu
-STM32F4_LIB := ../../../../../../STM32L1_Discovery_Firmware_V1.0.3
+STM32F4_LIB := ../../../../../../STM32L1-Discovery_FW_V1.0.3
 CMSIS_DIR   := $(STM32F4_LIB)/Libraries/CMSIS
 DRIVER_DIR  := $(STM32F4_LIB)/Libraries/STM32L1xx_StdPeriph_Driver
 BOARD_DIR   := $(STM32F4_LIB)/Utilities/STM32L-DISCOVERY
@@ -89,15 +89,16 @@ OUTPUT    := blinky-vanilla
 INCLUDES  = -I$(QPC)/include \
 	-I$(QP_PORT_DIR) \
 	-I. \
-        -I$(CMSIS_DIR)/Include \
-        -I$(CMSIS_DIR)/Device/ST/STM32L1xx/Include \
+	-I$(CMSIS_DIR)/Include \
+	-I$(CMSIS_DIR)/Device/ST/STM32L1xx/Include \
 	-I$(BOARD_DIR) \
-        -I$(DRIVER_DIR)/inc
+	-I$(DRIVER_DIR)/inc
 
 # defines
 DEFINES = -DUSE_STDPERIPH_DRIVER -DSTM32L1XX_MD
 
 ARM_CORE = cortex-m3
+MCUFLAGS = -mcpu=$(ARM_CORE) -mthumb
 
 #-----------------------------------------------------------------------------
 # files
@@ -113,7 +114,7 @@ C_SRCS := $(wildcard *.c) stm32l1xx_gpio.c stm32l1xx_rcc.c
 CPP_SRCS := $(wildcard *.cpp)
 
 LD_SCRIPT := stm32_flash.ld
-LIBS      := -lqp_$(ARM_CORE)_cs
+LIBS      := -lqp_$(ARM_CORE)
 
 #-----------------------------------------------------------------------------
 # build options for various configurations
@@ -130,19 +131,19 @@ ifeq (rel, $(CONF))       # Release configuration ............................
 
 BIN_DIR := rel
 
-ASFLAGS = -mcpu=$(ARM_CORE) -mthumb
+ASFLAGS = $(MCUFLAGS)
 
-CFLAGS = -mcpu=$(ARM_CORE) -mthumb \
+CFLAGS = $(MCUFLAGS) \
 	-Wall -Wextra -Warray-bounds \
 	-fdata-sections -ffunction-sections \
 	-Os $(INCLUDES) $(DEFINES) -DNDEBUG
 
-CPPFLAGS = -mcpu=$(ARM_CORE) -mthumb \
+CPPFLAGS = $(MCUFLAGS) \
 	-Wall -Wextra -Warray-bounds -fno-rtti -fno-exceptions \
 	-fdata-sections -ffunction-sections \
 	-Os $(INCLUDES) $(DEFINES) -DNDEBUG
 
-LINKFLAGS = -mcpu=$(ARM_CORE) -mthumb \
+LINKFLAGS = $(MCUFLAGS) \
 	-Wl,--gc-sections \
 	-T$(LD_SCRIPT) -Xlinker -Map=$(BIN_DIR)/$(OUTPUT).map \
 	-L$(QP_PORT_DIR)/$(BIN_DIR)
@@ -151,19 +152,19 @@ else ifeq (spy, $(CONF))  # Spy configuration ................................
 
 BIN_DIR := spy
 
-ASFLAGS = -mcpu=$(ARM_CORE) -mthumb
+ASFLAGS = -$(MCUFLAGS) -g
 
-CFLAGS = -mcpu=$(ARM_CORE) -mthumb \
+CFLAGS = $(MCUFLAGS) \
 	-Wall -Wextra -Warray-bounds \
 	-fdata-sections -ffunction-sections \
 	-g -O $(INCLUDES) $(DEFINES) -DQ_SPY
 
-CPPFLAGS = -mcpu=$(ARM_CORE) -mthumb \
+CPPFLAGS = $(MCUFLAGS) \
 	-Wall -Wextra -Warray-bounds -fno-rtti -fno-exceptions \
 	-fdata-sections -ffunction-sections \
 	-g -O $(INCLUDES) $(DEFINES) -DQ_SPY
 
-LINKFLAGS = -mcpu=$(ARM_CORE) -mthumb \
+LINKFLAGS = $(MCUFLAGS) \
 	-Wl,--gc-sections \
 	-T$(LD_SCRIPT) -Xlinker -Map=$(BIN_DIR)/$(OUTPUT).map \
 	-L$(QP_PORT_DIR)/$(BIN_DIR)
@@ -172,20 +173,20 @@ else                     # default Debug configuration .......................
 
 BIN_DIR := dbg
 
-ASFLAGS = -mcpu=$(ARM_CORE) -mthumb -g
+ASFLAGS = $(MCUFLAGS) -g
 
 # -mfloat-abi=hard
-CFLAGS = -mcpu=$(ARM_CORE) -mthumb \
+CFLAGS = $(MCUFLAGS) \
 	-Wall -Wextra -Warray-bounds \
 	-fdata-sections -ffunction-sections \
 	-g -O $(INCLUDES) $(DEFINES)
 
-CPPFLAGS = -mcpu=$(ARM_CORE) -mthumb \
+CPPFLAGS = $(MCUFLAGS) \
 	-Wall -Wextra -Warray-bounds -fno-rtti -fno-exceptions \
 	-fdata-sections -ffunction-sections \
 	-g -O $(INCLUDES) $(DEFINES)
 
-LINKFLAGS = -mcpu=$(ARM_CORE) -mthumb \
+LINKFLAGS = $(MCUFLAGS) \
 	-Wl,--gc-sections \
 	-T$(LD_SCRIPT) -Xlinker -Map=$(BIN_DIR)/$(OUTPUT).map \
 	-L$(QP_PORT_DIR)/$(BIN_DIR)
@@ -246,7 +247,7 @@ $(BIN_DIR)/%.o : %.cpp
 
 .PHONY : clean
 clean:
-	-$(RM) $(BIN_DIR)/*.o \
+	$(RM) $(BIN_DIR)/*.o \
 	$(BIN_DIR)/*.d \
 	$(BIN_DIR)/*.hex \
 	$(BIN_DIR)/*.elf \
@@ -263,8 +264,8 @@ show:
 	@echo CPP_DEPS_EXT = $(CPP_DEPS_EXT)
 	@echo TARGET_ELF = $(TARGET_ELF)
 
-flash:
-	st-flash write $(BIN_DIR)/$(OUTPUT).bin 0x08000000
+flash: $(TARGET_BIN)
+	st-flash write $(TARGET_BIN) 0x08000000
 
-size: $(BIN_DIR)/$(OUTPUT).elf
-	$(SIZE) $(BIN_DIR)/$(OUTPUT).elf
+size: $(TARGET_ELF)
+	$(SIZE) $(TARGET_ELF)

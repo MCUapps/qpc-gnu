@@ -46,8 +46,6 @@ enum ISR_Priorities {   /* ISR priorities starting from the highest urgency */
 };
 
 /* Local-scope objects -----------------------------------------------------*/
-static GPIO_InitTypeDef  GPIO_InitStructure;
-
 #define LED_GREEN   GPIO_Pin_12
 #define LED_ORANGE  GPIO_Pin_13
 #define LED_RED     GPIO_Pin_14
@@ -62,10 +60,6 @@ static GPIO_InitTypeDef  GPIO_InitStructure;
     #define UART_BAUD_RATE      115200U
     #define UART_FR_TXFE        0x80U
     #define UART_TXFIFO_DEPTH   16U
-
-    enum AppRecords {                 /* application-specific trace records */
-        PHILO_STAT = QS_USER
-    };
 
 #endif
 
@@ -93,6 +87,8 @@ void BSP_init(void) {
     /* GPIOD Periph clock enable */
     RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOD, ENABLE);
 
+    GPIO_InitTypeDef  GPIO_InitStructure;
+
     /* Configure PD12, PD13, PD14 and PD15 in output pushpull mode */
     GPIO_InitStructure.GPIO_Pin = GPIO_Pin_12 | GPIO_Pin_13| GPIO_Pin_14| GPIO_Pin_15;
     GPIO_InitStructure.GPIO_Mode = GPIO_Mode_OUT;
@@ -119,7 +115,7 @@ void BSP_ledOff(void) {
 /*..........................................................................*/
 void QF_onStartup(void) {
               /* set up the SysTick timer to fire at BSP_TICKS_PER_SEC rate */
-    SysTick_Config(168000000U / BSP_TICKS_PER_SEC);
+    SysTick_Config(SystemCoreClock / BSP_TICKS_PER_SEC);
 
                        /* set priorities of all interrupts in the system... */
     NVIC_SetPriority(SysTick_IRQn,   SYSTICK_PRIO);

@@ -1,7 +1,7 @@
 ##############################################################################
-# Product: Makefile for Blinky, EK-LM4F120XL, Vanilla kernel, GNU/Sourcery
+# Product: Makefile for Blinky, STM32F4-DISCOVERY, Vanilla kernel, GNU/Launchpad
 # Last Updated for Version: 4.5.04
-# Date of the Last Update:  Feb 07, 2013
+# Date of the Last Update:  Oct 03, 2013
 #
 #                    Q u a n t u m     L e a P s
 #                    ---------------------------
@@ -79,6 +79,7 @@ APP_DIR     := .
 
 # source directories
 VPATH = $(APP_DIR) \
+	$(BOARD_DIR) \
 	$(DRIVER_DIR)/src \
 	$(CMSIS_DIR)/ST/STM32F4xx/Source/Templates/gcc_ride7
 
@@ -98,8 +99,9 @@ INCLUDES  = -I$(QPC)/include \
 DEFINES = -DUSE_STDPERIPH_DRIVER -DSTM32F40_41xxx
 
 ARM_CORE = cortex-m4
-#ARM_FPU  = fpv4-sp-d16
-ARM_FPU  = vfp
+ARM_FPU = fpv4-sp-d16
+MCUFLAGS = -mcpu=$(ARM_CORE) -mfpu=$(ARM_FPU) -mfloat-abi=hard \
+	-mlittle-endian -mthumb -mthumb-interwork
 
 #-----------------------------------------------------------------------------
 # files
@@ -109,13 +111,13 @@ ARM_FPU  = vfp
 ASM_SRCS := startup_stm32f4xx.s
 
 # C source files
-C_SRCS := $(wildcard *.c) stm32f4xx_gpio.c stm32f4xx_rcc.c
+C_SRCS := $(wildcard *.c) stm32f4_discovery.c stm32f4xx_gpio.c stm32f4xx_rcc.c
 
 # C++ source files
 CPP_SRCS := $(wildcard *.cpp)
 
-LD_SCRIPT := stm32f4xx_flash.ld
-LIBS      := -lqp_$(ARM_CORE)f_cs
+LD_SCRIPT := stm32_flash.ld
+LIBS      := -lqp_$(ARM_CORE)-$(ARM_FPU)
 
 #-----------------------------------------------------------------------------
 # build options for various configurations
@@ -135,20 +137,17 @@ BIN_DIR := rel
 ASFLAGS = -mcpu=$(ARM_CORE) -defsym=FPU_VFP_V4_SP_D16=1 \
 	-mlittle-endian -mthumb -mthumb-interwork
 
-CFLAGS = -mcpu=$(ARM_CORE) -mfpu=$(ARM_FPU) \
-	-mlittle-endian -mthumb -mthumb-interwork \
+CFLAGS = $(MCUFLAGS) \
 	-Wall -Wextra -Warray-bounds \
 	-fdata-sections -ffunction-sections \
 	-Os $(INCLUDES) $(DEFINES) -DNDEBUG
 
-CPPFLAGS = -mcpu=$(ARM_CORE) -mfpu=$(ARM_FPU) \
-	-mlittle-endian -mthumb -mthumb-interwork \
+CPPFLAGS = $(MCUFLAGS) \
 	-Wall -Wextra -Warray-bounds -fno-rtti -fno-exceptions \
 	-fdata-sections -ffunction-sections \
 	-Os $(INCLUDES) $(DEFINES) -DNDEBUG
 
-LINKFLAGS = -mcpu=$(ARM_CORE) -mfpu=$(ARM_FPU) \
-	-mlittle-endian -mthumb -mthumb-interwork \
+LINKFLAGS = $(MCUFLAGS) \
 	-Wl,--gc-sections \
 	-T$(LD_SCRIPT) -Xlinker -Map=$(BIN_DIR)/$(OUTPUT).map \
 	-L$(QP_PORT_DIR)/$(BIN_DIR)
@@ -157,23 +156,19 @@ else ifeq (spy, $(CONF))  # Spy configuration ................................
 
 BIN_DIR := spy
 
-ASFLAGS = -mcpu=$(ARM_CORE) -defsym=FPU_VFP_V4_SP_D16=1 \
-	-mlittle-endian -mthumb -mthumb-interwork
+ASFLAGS = $(MCUFLAGS) -defsym=FPU_VFP_V4_SP_D16=1
 
-CFLAGS = -mcpu=$(ARM_CORE) -mfpu=$(ARM_FPU) \
-	-mlittle-endian -mthumb -mthumb-interwork \
+CFLAGS = $(MCUFLAGS) \
 	-Wall -Wextra -Warray-bounds \
 	-fdata-sections -ffunction-sections \
 	-g -O $(INCLUDES) $(DEFINES) -DQ_SPY
 
-CPPFLAGS = -mcpu=$(ARM_CORE) -mfpu=$(ARM_FPU) \
-	-mlittle-endian -mthumb -mthumb-interwork \
+CPPFLAGS = $(MCUFLAGS) \
 	-Wall -Wextra -Warray-bounds -fno-rtti -fno-exceptions \
 	-fdata-sections -ffunction-sections \
 	-g -O $(INCLUDES) $(DEFINES) -DQ_SPY
 
-LINKFLAGS = -mcpu=$(ARM_CORE) -mfpu=$(ARM_FPU) \
-	-mlittle-endian -mthumb -mthumb-interwork \
+LINKFLAGS = $(MCUFLAGS) \
 	-Wl,--gc-sections \
 	-T$(LD_SCRIPT) -Xlinker -Map=$(BIN_DIR)/$(OUTPUT).map \
 	-L$(QP_PORT_DIR)/$(BIN_DIR)
@@ -182,24 +177,20 @@ else                     # default Debug configuration .......................
 
 BIN_DIR := dbg
 
-ASFLAGS = -mcpu=$(ARM_CORE) -defsym=FPU_VFP_V4_SP_D16=1 \
-	-mlittle-endian -mthumb -mthumb-interwork -g
+ASFLAGS = $(MCUFLAGS) -defsym=FPU_VFP_V4_SP_D16=1 -g
 
 # -mfloat-abi=hard
-CFLAGS = -mcpu=$(ARM_CORE) -mfpu=$(ARM_FPU) \
-	-mlittle-endian -mthumb -mthumb-interwork \
+CFLAGS = $(MCUFLAGS) \
 	-Wall -Wextra -Warray-bounds \
 	-fdata-sections -ffunction-sections \
 	-g -O $(INCLUDES) $(DEFINES)
 
-CPPFLAGS = -mcpu=$(ARM_CORE) -mfpu=$(ARM_FPU) \
-	-mlittle-endian -mthumb -mthumb-interwork \
+CPPFLAGS = $(MCUFLAGS) \
 	-Wall -Wextra -Warray-bounds -fno-rtti -fno-exceptions \
 	-fdata-sections -ffunction-sections \
 	-g -O $(INCLUDES) $(DEFINES)
 
-LINKFLAGS = -mcpu=$(ARM_CORE) -mfpu=$(ARM_FPU) \
-	-mlittle-endian -mthumb -mthumb-interwork \
+LINKFLAGS = $(MCUFLAGS) \
 	-Wl,--gc-sections \
 	-T$(LD_SCRIPT) -Xlinker -Map=$(BIN_DIR)/$(OUTPUT).map \
 	-L$(QP_PORT_DIR)/$(BIN_DIR)
@@ -277,8 +268,8 @@ show:
 	@echo CPP_DEPS_EXT = $(CPP_DEPS_EXT)
 	@echo TARGET_ELF = $(TARGET_ELF)
 
-flash:
-	st-flash write $(BIN_DIR)/$(OUTPUT).bin 0x08000000
+flash: $(TARGET_BIN)
+	st-flash write $(TARGET_BIN) 0x08000000
 
-size: $(BIN_DIR)/$(OUTPUT).elf
-	$(SIZE) $(BIN_DIR)/$(OUTPUT).elf
+size: $(TARGET_ELF)
+	$(SIZE) $(TARGET_ELF)
