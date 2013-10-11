@@ -53,7 +53,7 @@ RM = rm -f
 CC  = gcc
 LIB = ar
 
-QPC        = ../../../..
+QPC        ?= ../../../..
 QP_INCDIR  = $(QPC)/include
 QEP_SRCDIR = $(QPC)/qep/source
 QF_SRCDIR  = $(QPC)/qf/source
@@ -74,7 +74,7 @@ BINDIR  = rel
 # gcc options
 # -c    : compile only
 # -O    : optimize
-CCFLAGS = -c -O2 -Wall -pthread -o$@
+CCFLAGS = -c -O2 -Wall -o$@
 
 else ifeq (spy, $(CONF))  # Spy configuration ................................
 
@@ -84,7 +84,7 @@ BINDIR   = spy
 # -c    : compile only
 # -g    : source level debugging
 # -D    : define preprocessor macro
-CCFLAGS = -c -g -O -Wall -pthread -DQ_SPY -o$@
+CCFLAGS = -c -g -O -Wall -DQ_SPY -o$@
 QS_OBJS = \
 	$(BINDIR)/qs.o \
 	$(BINDIR)/qs_.o \
@@ -104,7 +104,7 @@ QP_DEP  = $(QP_INCDIR)\qassert.h
 # gcc options
 # -c    : compile only
 # -g    : source level debugging
-CCFLAGS = -c -g -O -Wall -pthread -o$@
+CCFLAGS = -c -g -O -Wall -o$@
 
 endif
 
