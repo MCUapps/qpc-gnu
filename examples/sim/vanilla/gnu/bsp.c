@@ -73,9 +73,9 @@ void BSP_init(void) {
     QS_OBJ_DICTIONARY(&l_clock_tick);   /* must be called *after* QF_init() */
 }
 /*..........................................................................*/
-void BSP_terminate(int16_t result) {
-    (void)result;
+void BSP_terminate(int result) {
     QF_stop();
+    exit(result);
 }
 
 /*..........................................................................*/
@@ -93,7 +93,8 @@ void QF_onStartup(void) {                               /* startup callback */
 void QF_onCleanup(void) {                               /* cleanup callback */
     printf("\nBye! Bye!\n");
     tcsetattr(0, TCSANOW, &l_tsav);/* restore the saved terminal attributes */
-    QS_EXIT();                                    /* perfomr the QS cleanup */
+    QS_EXIT();                                    /* perform the QS cleanup */
+    exit(0);
 }
 /*..........................................................................*/
 void QF_onClockTick(void) {

@@ -43,7 +43,7 @@
 #define BSP_ledOn()     printf("LED On\n")
 
 void BSP_init(void);
-void BSP_terminate(int16_t result);
+void BSP_terminate(int result);
 
 
 #endif                                                             /* bsp_h */
