@@ -156,7 +156,7 @@ QF_OBJS = \
 	$(BINDIR)/qte_darm.o \
 	$(BINDIR)/qte_rarm.o \
 	$(BINDIR)/qte_ctr.o \
-        $(BINDIR)/qf_port.o
+        $(BINDIR)/qvanilla.o
 
 # the 'all' target ===========================================================
 
@@ -280,7 +280,7 @@ $(BINDIR)/qte_rarm.o: $(QF_SRCDIR)/qte_rarm.c
 $(BINDIR)/qte_ctr.o: $(QF_SRCDIR)/qte_ctr.c
 	$(CC) $(CCFLAGS) $(CCINC) -I$(QF_SRCDIR) $<
 
-$(BINDIR)/qf_port.o: qf_port.c
+$(BINDIR)/qvanilla.o: $(QF_SRCDIR)/qvanilla.c
 	$(CC) $(CCFLAGS) $(CCINC) -I$(QF_SRCDIR) $<
 
 # QS -----------------------------------------
