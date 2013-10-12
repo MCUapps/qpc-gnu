@@ -33,6 +33,7 @@
 * e-mail:                  info@quantum-leaps.com
 *****************************************************************************/
 #include "qp_port.h"
+#include "qspy.h"
 #include "project.h"
 #include "bsp.h"
 
@@ -42,6 +43,7 @@
 #include <sys/select.h>
 #include <termios.h>
 #include <unistd.h>
+#include <time.h>
 
 Q_DEFINE_THIS_FILE
 
@@ -62,7 +64,7 @@ void BSP_setTickRate(uint32_t ticksPerSec) {
 }
 /*..........................................................................*/
 void BSP_init(void) {
-    printf("Ring for posix"
+    printf("Blinky for sim"
            "\nQEP %s\nQF  %s\n"
            "Press ESC to quit...\n",
            QEP_getVersion(),
@@ -94,7 +96,6 @@ void QF_onCleanup(void) {                               /* cleanup callback */
     printf("\nBye! Bye!\n");
     tcsetattr(0, TCSANOW, &l_tsav);/* restore the saved terminal attributes */
     QS_EXIT();                                    /* perform the QS cleanup */
-    exit(0);
 }
 /*..........................................................................*/
 void QF_onClockTick(void) {
@@ -119,18 +120,16 @@ void QF_onClockTick(void) {
 /*..........................................................................*/
 void QF_onIdle(void) {       /* called with interrupts disabled, see NOTE01 */
 #ifdef Q_SPY
-    if ((UART0->FR & UART_FR_TXFE) != 0) {                      /* TX done? */
-        uint16_t fifo = UART_TXFIFO_DEPTH;       /* max bytes we can accept */
-        uint8_t const *block;
+    uint16_t nBytes = 256;
+    uint8_t const *block;
 
-        QF_INT_DISABLE();
-        block = QS_getBlock(&fifo);    /* try to get next block to transmit */
-        QF_INT_ENABLE();
+    block = QS_getBlock(&nBytes);
+    QF_INT_ENABLE();
 
-        while (fifo-- != 0) {                    /* any bytes in the block? */
-            UART0->DR = *block++;                      /* put into the FIFO */
-        }
+    if (block != (uint8_t *)0) {
+        QSPY_parse(block, nBytes);
     }
+
 #elif defined NDEBUG
     /* Put the CPU and peripherals to the low-power mode.
     * you might need to customize the clock management for your application,
@@ -161,28 +160,6 @@ void Q_onAssert(char const Q_ROM * const Q_ROM_VAR file, int line) {
 
 static uint8_t l_running;
 
-/*..........................................................................*/
-static void *idleThread(void *par) {     /* the expected P-Thread signature */
-    (void)par;
-
-    l_running = (uint8_t)1;
-    while (l_running) {
-        uint16_t nBytes = 256;
-        uint8_t const *block;
-        struct timeval timeout = { 0 };             /* timeout for select() */
-
-        QF_CRIT_ENTRY(dummy);
-        block = QS_getBlock(&nBytes);
-        QF_CRIT_EXIT(dummy);
-
-        if (block != (uint8_t *)0) {
-            QSPY_parse(block, nBytes);
-        }
-        timeout.tv_usec = 10000;
-        select(0, 0, 0, 0, &timeout);                  /* sleep for a while */
-    }
-    return 0;                                             /* return success */
-}
 /*..........................................................................*/
 uint8_t QS_onStartup(void const *arg) {
     static uint8_t qsBuf[4*1024];                 // 4K buffer for Quantum Spy
@@ -249,41 +226,10 @@ uint8_t QS_onStartup(void const *arg) {
 
     QS_RESET();
 
-    {
-        pthread_attr_t attr;
-        struct sched_param param;
-        pthread_t idle;
-
-        /* SCHED_FIFO corresponds to real-time preemptive priority-based
-        * scheduler.
-        * NOTE: This scheduling policy requires the superuser priviledges
-        */
-        pthread_attr_init(&attr);
-        pthread_attr_setschedpolicy(&attr, SCHED_FIFO);
-        param.sched_priority = sched_get_priority_min(SCHED_FIFO);
-
-        pthread_attr_setschedparam(&attr, &param);
-        pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_DETACHED);
-
-        if (pthread_create(&idle, &attr, &idleThread, 0) != 0) {
-               /* Creating the p-thread with the SCHED_FIFO policy failed.
-               * Most probably this application has no superuser privileges,
-               * so we just fall back to the default SCHED_OTHER policy
-               * and priority 0.
-               */
-            pthread_attr_setschedpolicy(&attr, SCHED_OTHER);
-            param.sched_priority = 0;
-            pthread_attr_setschedparam(&attr, &param);
-            Q_ALLEGE(pthread_create(&idle, &attr, &idleThread, 0) == 0);
-        }
-        pthread_attr_destroy(&attr);
-    }
-
     return (uint8_t)1;
 }
 /*..........................................................................*/
 void QS_onCleanup(void) {
-    l_running = (uint8_t)0;
     QSPY_stop();
 }
 /*..........................................................................*/
