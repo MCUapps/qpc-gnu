@@ -100,7 +100,7 @@ DEFINES = -DUSE_STDPERIPH_DRIVER -DSTM32F40_41xxx
 
 ARM_CORE = cortex-m4
 ARM_FPU = fpv4-sp-d16
-MCUFLAGS = -mcpu=$(ARM_CORE) -mfpu=$(ARM_FPU) -mfloat-abi=hard \
+MFLAGS = -mcpu=$(ARM_CORE) -mfpu=$(ARM_FPU) -mfloat-abi=softfp \
 	-mlittle-endian -mthumb -mthumb-interwork
 
 #-----------------------------------------------------------------------------
@@ -134,20 +134,19 @@ ifeq (rel, $(CONF))       # Release configuration ............................
 
 BIN_DIR := rel
 
-ASFLAGS = -mcpu=$(ARM_CORE) -defsym=FPU_VFP_V4_SP_D16=1 \
-	-mlittle-endian -mthumb -mthumb-interwork
+ASFLAGS = $(MFLAGS) -defsym=FPU_VFP_V4_SP_D16=1
 
-CFLAGS = $(MCUFLAGS) \
+CFLAGS = $(MFLAGS) \
 	-Wall -Wextra -Warray-bounds \
 	-fdata-sections -ffunction-sections \
 	-Os $(INCLUDES) $(DEFINES) -DNDEBUG
 
-CPPFLAGS = $(MCUFLAGS) \
+CPPFLAGS = $(MFLAGS) \
 	-Wall -Wextra -Warray-bounds -fno-rtti -fno-exceptions \
 	-fdata-sections -ffunction-sections \
 	-Os $(INCLUDES) $(DEFINES) -DNDEBUG
 
-LINKFLAGS = $(MCUFLAGS) \
+LINKFLAGS = $(MFLAGS) \
 	-Wl,--gc-sections \
 	-T$(LD_SCRIPT) -Xlinker -Map=$(BIN_DIR)/$(OUTPUT).map \
 	-L$(QP_PORT_DIR)/$(BIN_DIR)
@@ -156,19 +155,19 @@ else ifeq (spy, $(CONF))  # Spy configuration ................................
 
 BIN_DIR := spy
 
-ASFLAGS = $(MCUFLAGS) -defsym=FPU_VFP_V4_SP_D16=1
+ASFLAGS = $(MFLAGS) -defsym=FPU_VFP_V4_SP_D16=1 -g
 
-CFLAGS = $(MCUFLAGS) \
+CFLAGS = $(MFLAGS) \
 	-Wall -Wextra -Warray-bounds \
 	-fdata-sections -ffunction-sections \
 	-g -O $(INCLUDES) $(DEFINES) -DQ_SPY
 
-CPPFLAGS = $(MCUFLAGS) \
+CPPFLAGS = $(MFLAGS) \
 	-Wall -Wextra -Warray-bounds -fno-rtti -fno-exceptions \
 	-fdata-sections -ffunction-sections \
 	-g -O $(INCLUDES) $(DEFINES) -DQ_SPY
 
-LINKFLAGS = $(MCUFLAGS) \
+LINKFLAGS = $(MFLAGS) \
 	-Wl,--gc-sections \
 	-T$(LD_SCRIPT) -Xlinker -Map=$(BIN_DIR)/$(OUTPUT).map \
 	-L$(QP_PORT_DIR)/$(BIN_DIR)
@@ -177,20 +176,20 @@ else                     # default Debug configuration .......................
 
 BIN_DIR := dbg
 
-ASFLAGS = $(MCUFLAGS) -defsym=FPU_VFP_V4_SP_D16=1 -g
+ASFLAGS = $(MFLAGS) -defsym=FPU_VFP_V4_SP_D16=1 -g
 
 # -mfloat-abi=hard
-CFLAGS = $(MCUFLAGS) \
+CFLAGS = $(MFLAGS) \
 	-Wall -Wextra -Warray-bounds \
 	-fdata-sections -ffunction-sections \
 	-g -O $(INCLUDES) $(DEFINES)
 
-CPPFLAGS = $(MCUFLAGS) \
+CPPFLAGS = $(MFLAGS) \
 	-Wall -Wextra -Warray-bounds -fno-rtti -fno-exceptions \
 	-fdata-sections -ffunction-sections \
 	-g -O $(INCLUDES) $(DEFINES)
 
-LINKFLAGS = $(MCUFLAGS) \
+LINKFLAGS = $(MFLAGS) \
 	-Wl,--gc-sections \
 	-T$(LD_SCRIPT) -Xlinker -Map=$(BIN_DIR)/$(OUTPUT).map \
 	-L$(QP_PORT_DIR)/$(BIN_DIR)

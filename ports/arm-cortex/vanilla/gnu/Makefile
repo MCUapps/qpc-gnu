@@ -67,30 +67,30 @@ CCINC      = -I$(QP_PRTDIR) -I$(QP_INCDIR)
 ifeq (cortex-m0, $(MCU))
 
 ARM_CORE = cortex-m0
-MCUFLAGS = -mcpu=$(ARM_CORE) -mthumb -mabi=aapcs -mfloat-abi=soft
+MFLAGS = -mcpu=$(ARM_CORE) -mthumb -mabi=aapcs -mfloat-abi=soft
 
 else ifeq (cortex-m0plus, $(MCU))
 
 ARM_CORE = cortex-m0plus
-MCUFLAGS = -mcpu=$(ARM_CORE) -mthumb -mfloat-abi=soft
+MFLAGS = -mcpu=$(ARM_CORE) -mthumb -mfloat-abi=soft
 
 else ifeq (cortex-m3, $(MCU))
 
 ARM_CORE = cortex-m3
-MCUFLAGS = -mcpu=$(ARM_CORE) -mthumb -mabi=aapcs -mfloat-abi=soft
+MFLAGS = -mcpu=$(ARM_CORE) -mthumb -mabi=aapcs -mfloat-abi=soft
 
 else ifeq (cortex-m4-vfp, $(MCU))
 
 ARM_CORE = cortex-m4
 ARM_FPU = fpv4-sp-d16
-MCUFLAGS = -mcpu=$(ARM_CORE) -mfpu=$(ARM_FPU) \
+MFLAGS = -mcpu=$(ARM_CORE) -mfpu=$(ARM_FPU) \
 	-mlittle-endian -mthumb -mthumb-interwork
 
 else ifeq (cortex-m4-fpv4-sp-d16, $(MCU))
 
 ARM_CORE = cortex-m4
 ARM_FPU = fpv4-sp-d16
-MCUFLAGS = -mcpu=$(ARM_CORE) -mfpu=$(ARM_FPU) -mfloat-abi=hard \
+MFLAGS = -mcpu=$(ARM_CORE) -mfpu=$(ARM_FPU) -mfloat-abi=softfp \
 	-mlittle-endian -mthumb -mthumb-interwork
 
 else
@@ -109,7 +109,7 @@ BINDIR  = rel
 # gcc options
 # -c    : compile only
 # -O    : optimize
-CCFLAGS = $(MCUFLAGS) -fdata-sections -ffunction-sections \
+CCFLAGS = $(MFLAGS) -fdata-sections -ffunction-sections \
         -c -O2 -Wall -o$@
 
 else ifeq (spy, $(CONF))  # Spy configuration ................................
@@ -120,7 +120,7 @@ BINDIR   = spy
 # -c    : compile only
 # -g    : source level debugging
 # -D    : define preprocessor macro
-CCFLAGS = $(MCUFLAGS) -fdata-sections -ffunction-sections \
+CCFLAGS = $(MFLAGS) -fdata-sections -ffunction-sections \
         -c -g -O -Wall -DQ_SPY -o$@
 QS_OBJS = \
 	$(BINDIR)/qs.o \
@@ -141,7 +141,7 @@ QP_DEP  = $(QP_INCDIR)\qassert.h
 # gcc options
 # -c    : compile only
 # -g    : source level debugging
-CCFLAGS = $(MCUFLAGS) -fdata-sections -ffunction-sections \
+CCFLAGS = $(MFLAGS) -fdata-sections -ffunction-sections \
         -c -g -O -Wall -o$@
 
 endif
