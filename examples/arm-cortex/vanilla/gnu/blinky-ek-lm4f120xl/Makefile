@@ -68,6 +68,7 @@ CPP   := $(GNU_ARM)/bin/arm-none-eabi-g++
 AS    := $(GNU_ARM)/bin/arm-none-eabi-as
 LINK  := $(GNU_ARM)/bin/arm-none-eabi-gcc
 BIN   := $(GNU_ARM)/bin/arm-none-eabi-objcopy
+SIZE  := $(GNU_ARM)/bin/arm-none-eabi-size
 RM    := rm -rf
 MKDIR := mkdir
 
@@ -124,6 +125,13 @@ LIBS      := -lqp_$(ARM_CORE)-$(ARM_FPU)
 # build options for various configurations
 #
 
+### Build flags
+#
+# -fdata-sections, -ffunction-sections and -Wl,--gc-sections -Wl,-s
+# are used for dead code elimination, see:
+# http://gcc.gnu.org/ml/gcc-help/2003-08/msg00128.html
+#
+
 ifeq (rel, $(CONF))       # Release configuration ............................
 
 BIN_DIR := rel
@@ -131,13 +139,16 @@ BIN_DIR := rel
 ASFLAGS = -mcpu=$(ARM_CORE) -defsym=FPU_VFP_V4_SP_D16=1
 
 CFLAGS = $(MFLAGS) -Wall \
+	-fdata-sections -ffunction-sections \
 	-Os $(INCLUDES) $(DEFINES) -DNDEBUG
 
 CPPFLAGS = $(MFLAGS) \
+	-fdata-sections -ffunction-sections \
 	-Wall -fno-rtti -fno-exceptions \
 	-Os $(INCLUDES) $(DEFINES) -DNDEBUG
 
 LINKFLAGS = $(MFLAGS) \
+	-Wl,--gc-sections \
 	-T$(LD_SCRIPT) -nostdlib -Xlinker \
 	-Map=$(BIN_DIR)/$(OUTPUT).map \
 	-L$(QP_PORT_DIR)/$(BIN_DIR)
@@ -149,13 +160,16 @@ BIN_DIR := spy
 ASFLAGS = -g -mcpu=$(ARM_CORE) -defsym=FPU_VFP_V4_SP_D16=1
 
 CFLAGS = $(MFLAGS) -Wall \
+	-fdata-sections -ffunction-sections \
 	-g -O $(INCLUDES) $(DEFINES) -DQ_SPY
 
 CPPFLAGS = $(MFLAGS)b \
+	-fdata-sections -ffunction-sections \
 	-Wall -fno-rtti -fno-exceptions \
 	-g -O $(INCLUDES) $(DEFINES) -DQ_SPY
 
 LINKFLAGS = $(MFLAGS) \
+	-Wl,--gc-sections \
 	-T$(LD_SCRIPT) -nostdlib -Xlinker \
 	-Map=$(BIN_DIR)/$(OUTPUT).map \
 	-L$(QP_PORT_DIR)/$(BIN_DIR)
@@ -167,13 +181,16 @@ BIN_DIR := dbg
 ASFLAGS = -g -mcpu=$(ARM_CORE) -defsym=FPU_VFP_V4_SP_D16=1
 
 CFLAGS = $(MFLAGS) -Wall \
+	-fdata-sections -ffunction-sections \
 	-g -O $(INCLUDES) $(DEFINES)
 
 CPPFLAGS = $(MFLAGS) \
+	-fdata-sections -ffunction-sections \
 	-Wall -fno-rtti -fno-exceptions \
 	-g -O $(INCLUDES) $(DEFINES)
 
 LINKFLAGS = $(MFLAGS) \
+	-Wl,--gc-sections \
 	-T$(LD_SCRIPT) -nostdlib -Xlinker \
 	-Map=$(BIN_DIR)/$(OUTPUT).map \
 	-L$(QP_PORT_DIR)/$(BIN_DIR)
