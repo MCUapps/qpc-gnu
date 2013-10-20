@@ -138,19 +138,10 @@ void SysTick_Handler(void) {
 void GPIOPortA_IRQHandler(void) {
 }
 
-void FPUEnable(void)
-{
-    //
-    // Enable the coprocessors used by the floating-point unit.
-    //
-    HWREG(NVIC_CPAC) = ((HWREG(NVIC_CPAC) &
-                         ~(NVIC_CPAC_CP10_M | NVIC_CPAC_CP11_M)) |
-                        NVIC_CPAC_CP10_FULL | NVIC_CPAC_CP11_FULL);
-}
 /*..........................................................................*/
 void BSP_init(void) {
                                           /* Enable the floating-point unit */
-    FPUEnable();
+    ROM_FPUEnable();
 
     //
     // Enable lazy stacking for interrupt handlers.  This allows floating-point
@@ -164,6 +155,10 @@ void BSP_init(void) {
     //
     ROM_SysCtlClockSet(SYSCTL_SYSDIV_1 | SYSCTL_USE_OSC | SYSCTL_OSC_MAIN |
                        SYSCTL_XTAL_16MHZ);
+
+    // Max speed: 80 MHz clock off PLL 
+//    ROM_SysCtlClockSet(SYSCTL_SYSDIV_2_5 | SYSCTL_USE_PLL | SYSCTL_OSC_MAIN |
+//                       SYSCTL_XTAL_16MHZ);
 
     //
     // Enable the GPIO port that is used for the on-board LED.
